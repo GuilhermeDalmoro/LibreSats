@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="dark">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +10,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -25,12 +24,6 @@
     </script>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4"></script>
-    <!-- Buffer polyfill for browser -->
-    <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
-    <!-- tiny-secp256k1 CDN (required for bitcoinjs-lib) -->
-    <script src="https://unpkg.com/tiny-secp256k1@2.2.3"></script>
-    <!-- bitcoinjs-lib CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/bitcoinjs-lib@6.1.6"></script>
     <!-- QRCode.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
     <!-- Leaflet CSS CDN -->
@@ -41,167 +34,303 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <!-- CryptoJS for SHA256 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <style>
+        /* Base Styles */
         body {
             font-family: 'Inter', sans-serif;
-            transition: all 0.3s ease;
+            background-color: #111827;
+            color: #f3f4f6;
+            margin: 0;
+            min-height: 100vh;
         }
-        html:not(.dark) {
-            --bg-color: #f3f4f6;
-            --text-color: #111827;
-            --card-bg: #ffffff;
-            --sidebar-bg: #e5e7eb;
-            --gray-700: #d1d5db;
-            --gray-800: #f3f4f6;
-            --gray-900: #ffffff;
-            --gray-400: #6b7280;
+
+        /* Header */
+        header {
+            background-color: #374151;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            height: 48px; /* Reduced height */
+            padding: 0.5rem 1rem; /* Smaller padding */
         }
-        html.dark {
-            --bg-color: #111827;
-            --text-color: #f3f4f6;
-            --card-bg: #1f2937;
-            --sidebar-bg: #374151;
-            --gray-700: #4b5563;
-            --gray-800: #374151;
-            --gray-900: #111827;
-            --gray-400: #9ca3af;
+        header button {
+            transition: background-color 0.2s ease;
+            font-size: 0.875rem; /* Smaller button text */
         }
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
+        header button:hover {
+            background-color: #f59e0b;
         }
+
+        /* Sidebar */
         aside {
-            background-color: var(--sidebar-bg);
+            background-color: #374151;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
         }
+        aside button {
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        aside button:hover {
+            transform: translateX(5px);
+            background-color: #4b5563 !important;
+        }
+
+        /* Card and Module Styling */
         .bg-gray-800 {
-            background-color: var(--gray-800);
+            background-color: #374151;
         }
         .bg-gray-700 {
-            background-color: var(--gray-700);
+            background-color: #4b5563;
         }
         .bg-gray-900 {
-            background-color: var(--gray-900);
+            background-color: #111827;
         }
         .text-gray-400 {
-            color: var(--gray-400);
+            color: #9ca3af;
         }
-        .text-white {
-            color: var(--text-color);
+        .card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(255, 165, 0, 0.3);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        /* Timeline */
         .timeline::after {
-            background-color: var(--gray-700);
+            background-color: #4b5563;
         }
         .timeline-item::after {
             background-color: #FFA500;
-            border-color: var(--gray-700);
+            border-color: #4b5563;
         }
         .timeline-content {
-            background-color: var(--card-bg);
+            background-color: #1f2937;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+        .timeline-content:hover {
+            transform: scale(1.05);
         }
         .timeline-date {
             color: #FFA500;
         }
+
+        /* Map */
         #map {
             height: 500px;
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         }
-        .card:hover {
-            box-shadow: 0 8px 16px rgba(255, 165, 0, 0.2);
+
+        /* Modal - IMPROVED FOR MESSAGE VAULT */
+        #tool-modal {
+            animation: slideIn 0.3s ease-in-out;
+            z-index: 50;
+            overflow-y: auto;
+            padding: 20px 0;
         }
-        aside button:hover {
-            background-color: var(--gray-700) !important;
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-content {
+            max-height: 90vh;
+            overflow-y: auto;
+            width: 90%;
+            max-width: 700px;
+        }
+        #tool-modal .step {
+            background-color: #1f2937;
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        #tool-modal .step:hover {
+            background-color: #2d3748;
+            border-left-color: #FFA500;
+            transform: translateX(5px);
+        }
+        #tool-modal .step-number {
+            background-color: #FFA500;
+            color: #111827;
+            font-weight: bold;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-right: 1rem;
+            flex-shrink: 0;
+            font-size: 0.9rem;
+        }
+        #tool-modal .step p {
+            margin: 0;
+            line-height: 1.5;
+        }
+        #hash-result {
+            word-break: break-all;
+            background-color: #1f2937;
+            padding: 1.25rem;
+            border-radius: 8px;
+            border: 1px solid #4b5563;
+            font-family: monospace;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            margin-top: 1rem;
+        }
+        #message-input {
+            resize: none;
+            transition: all 0.3s ease;
+            border: 1px solid #4b5563;
+            font-family: inherit;
+        }
+        #message-input:focus {
+            border-color: #FFA500;
+            box-shadow: 0 0 0 3px rgba(255, 165, 0, 0.2);
+            outline: none;
+        }
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: rgba(239, 68, 68, 0.1);
+            border-radius: 4px;
+            border-left: 3px solid #ef4444;
+        }
+        
+        /* Improved instructions section */
+        #instructions {
+            margin-top: 1.5rem;
+        }
+        #instructions h3 {
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+        
+        /* Character counter */
+        .char-counter {
+            text-align: right;
+            font-size: 0.8rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+        .char-counter.warning {
+            color: #f59e0b;
+        }
+        .char-counter.error {
+            color: #ef4444;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            aside {
+                width: 100%;
+                height: auto;
+                position: static;
+                padding-top: 3rem;
+            }
+            main {
+                margin-left: 0;
+                padding-top: 6rem;
+            }
+            .modal-content {
+                max-width: 95%;
+                padding: 1rem;
+            }
+            #tool-modal .step {
+                flex-direction: column;
+            }
+            #tool-modal .step-number {
+                margin-right: 0;
+                margin-bottom: 0.5rem;
+            }
         }
     </style>
 </head>
-<body class="min-h-screen flex">
+<body class="min-h-screen flex flex-col">
+    <!-- Top Navbar -->
+    <header class="fixed top-0 left-0 right-0 z-20 p-2 flex justify-end space-x-4 h-12">
+        <button onclick="openMessageVault()" class="bg-neon-orange text-gray-900 py-1 px-3 rounded-md hover:bg-orange-600">🔑 Cofre de Mensagens</button>
+    </header>
+
     <!-- Sidebar -->
-    <aside class="w-64 h-screen fixed left-0 top-0 p-4 flex flex-col space-y-4">
+    <aside class="w-64 h-screen fixed left-0 top-0 pt-12 p-4 flex flex-col space-y-4">
         <h1 class="text-2xl font-bold text-neon-orange mb-6">Bitcoin Open Source Hub</h1>
         <button onclick="showModule('price-tracker')" class="w-full text-left py-2 px-4 rounded-lg hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-neon-orange">Price Tracker</button>
         <button onclick="showModule('mapa')" class="w-full text-left py-2 px-4 rounded-lg hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-neon-orange">Mapa da Descentralização</button>
-        <button onclick="showModule('carteiras')" class="w-full text-left py-2 px-4 rounded-lg hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-neon-orange">Carteira Educacional</button>
         <button onclick="showModule('historia')" class="w-full text-left py-2 px-4 rounded-lg hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-neon-orange">Timeline Histórica</button>
         <button onclick="showModule('projetos')" class="w-full text-left py-2 px-4 rounded-lg hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-neon-orange">Open Source Hub</button>
         <button onclick="showModule('simulador')" class="w-full text-left py-2 px-4 rounded-lg hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-neon-orange">Simulador de Investimento</button>
-        <button onclick="toggleTheme()" class="w-full text-left py-2 px-4 rounded-lg hover:bg-gray-700 mt-auto">Toggle Theme</button>
     </aside>
 
     <!-- Main Content -->
-    <main class="ml-64 flex-1 p-8">
+    <main class="ml-64 flex-1 p-8 pt-16">
         <div id="price-tracker" class="module hidden">
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg card">
                 <h2 class="text-xl font-semibold mb-4 text-neon-orange">Price Tracker</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="bg-gray-700 p-4 rounded-md">
+                    <div class="bg-gray-700 p-4 rounded-md card">
                         <p class="text-sm text-gray-400">Preço em USD</p>
                         <p id="price-usd" class="text-2xl font-bold">--</p>
                         <p id="change-usd" class="text-sm">--</p>
                     </div>
-                    <div class="bg-gray-700 p-4 rounded-md">
+                    <div class="bg-gray-700 p-4 rounded-md card">
                         <p class="text-sm text-gray-400">Preço em EUR</p>
                         <p id="price-eur" class="text-2xl font-bold">--</p>
                         <p id="change-eur" class="text-sm">--</p>
                     </div>
-                    <div class="bg-gray-700 p-4 rounded-md">
+                    <div class="bg-gray-700 p-4 rounded-md card">
                         <p class="text-sm text-gray-400">Preço em BRL</p>
                         <p id="price-brl" class="text-2xl font-bold">--</p>
                         <p id="change-brl" class="text-sm">--</p>
                     </div>
                 </div>
-                <div class="w-full h-64">
+                <div class="chart-container">
                     <canvas id="price-chart"></canvas>
                 </div>
             </div>
         </div>
 
         <div id="mapa" class="module hidden">
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg card">
                 <h2 class="text-xl font-semibold mb-4 text-neon-orange">Mapa da Descentralização</h2>
                 <div id="map"></div>
             </div>
         </div>
 
-        <div id="carteiras" class="module hidden">
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                <h2 class="text-xl font-semibold mb-4 text-neon-orange">Carteira Educacional</h2>
-                <button onclick="generateWallet()" class="bg-neon-orange text-gray-900 py-2 px-4 rounded-md hover:bg-orange-600 mb-6">Gerar Carteira</button>
-                <div id="wallet-info" class="hidden">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h3 class="text-lg font-semibold mb-2">Chave Privada</h3>
-                            <p id="private-key" class="bg-gray-700 p-4 rounded-md break-all"></p>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-semibold mb-2">Endereço Público</h3>
-                            <p id="public-address" class="bg-gray-700 p-4 rounded-md break-all"></p>
-                        </div>
-                    </div>
-                    <div class="mt-6">
-                        <h3 class="text-lg font-semibold mb-2">QR Code</h3>
-                        <div id="qr-code" class="bg-white p-4 rounded-md inline-block"></div>
-                    </div>
-                </div>
-                <p id="wallet-error" class="text-red-500 hidden">Erro ao gerar carteira. Verifique o console.</p>
-            </div>
-        </div>
-
         <div id="historia" class="module hidden">
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg card">
                 <h2 class="text-xl font-semibold mb-4 text-neon-orange">Timeline Histórica</h2>
                 <div class="timeline" id="timeline-container"></div>
             </div>
         </div>
 
         <div id="projetos" class="module hidden">
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg card">
                 <h2 class="text-xl font-semibold mb-4 text-neon-orange">Open Source Hub</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="projects-list"></div>
             </div>
         </div>
 
         <div id="simulador" class="module hidden">
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg card">
                 <h2 class="text-xl font-semibold mb-4 text-neon-orange">Simulador de Investimento</h2>
                 <form id="simulator-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div>
@@ -219,17 +348,17 @@
                 <div id="simulation-results" class="hidden">
                     <h3 class="text-lg font-semibold mb-4">Resultados</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-gray-700 p-4 rounded-md">
+                        <div class="bg-gray-700 p-4 rounded-md card">
                             <p class="text-sm text-gray-400">Bitcoin</p>
                             <p id="result-btc" class="text-2xl font-bold">--</p>
                             <p id="roi-btc" class="text-sm">--</p>
                         </div>
-                        <div class="bg-gray-700 p-4 rounded-md">
+                        <div class="bg-gray-700 p-4 rounded-md card">
                             <p class="text-sm text-gray-400">Ouro</p>
                             <p id="result-gold" class="text-2xl font-bold">--</p>
                             <p id="roi-gold" class="text-sm">--</p>
                         </div>
-                        <div class="bg-gray-700 p-4 rounded-md">
+                        <div class="bg-gray-700 p-4 rounded-md card">
                             <p class="text-sm text-gray-400">Dólar</p>
                             <p id="result-usd" class="text-2xl font-bold">--</p>
                             <p id="roi-usd" class="text-sm">--</p>
@@ -238,11 +367,18 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal for Message Vault -->
+        <div id="tool-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg max-w-lg w-full modal-content">
+                <h2 id="tool-title" class="text-xl font-semibold mb-4 text-neon-orange"></h2>
+                <div id="tool-content"></div>
+                <button onclick="closeModal()" class="bg-neon-orange text-gray-900 py-2 px-4 rounded-md hover:bg-orange-600 mt-4">Fechar</button>
+            </div>
+        </div>
     </main>
 
     <script>
-        window.Buffer = Buffer;
-
         function showModule(moduleId) {
             const modules = document.querySelectorAll('.module');
             modules.forEach(mod => mod.classList.add('hidden'));
@@ -251,7 +387,6 @@
                 selected.classList.remove('hidden');
                 if (moduleId === 'price-tracker') loadPriceTracker();
                 if (moduleId === 'mapa') loadMap();
-                if (moduleId === 'carteiras') generateWallet();
                 if (moduleId === 'historia') loadTimeline();
                 if (moduleId === 'projetos') loadProjects();
                 if (moduleId === 'simulador') simulateInvestment();
@@ -284,7 +419,7 @@
                 const klinesResponse = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=24');
                 const klinesData = await klinesResponse.json();
                 const labels = klinesData.map(k => new Date(k[0]).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-                const data = klinesData.map(k => k[4]); // close price
+                const data = klinesData.map(k => k[4]);
 
                 const ctx = document.getElementById('price-chart').getContext('2d');
                 if (window.priceChart) window.priceChart.destroy();
@@ -303,6 +438,7 @@
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         scales: {
                             y: { ticks: { color: '#fff' }, grid: { color: '#4b5563' } },
                             x: { ticks: { color: '#fff' }, grid: { color: '#4b5563' } }
@@ -331,28 +467,36 @@
                         }
                     });
                 })
-                .catch(error => console.error('Erro no Mapa:', error));
-        }
-
-        function generateWallet() {
-            try {
-                const ECPair = bitcoin.ECPairFactory(tinysecp256k1);
-                const keyPair = ECPair.makeRandom({ network: bitcoin.networks.testnet });
-                const { address } = bitcoin.payments.p2pkh({ pubkey: keyPair.publicKey, network: bitcoin.networks.testnet });
-                document.getElementById('private-key').textContent = keyPair.toWIF();
-                document.getElementById('public-address').textContent = address;
-                const qrContainer = document.getElementById('qr-code');
-                qrContainer.innerHTML = '';
-                QRCode.toCanvas(address, { color: { dark: '#000', light: '#fff' } }, (err, canvas) => {
-                    if (err) console.error(err);
-                    qrContainer.appendChild(canvas);
+                .catch(error => {
+                    console.error('Erro na API Bitnodes:', error);
+                    const staticNodes = [
+                        { lat: 37.7749, lon: -122.4194, info: 'San Francisco, USA' },
+                        { lat: 52.5200, lon: 13.4050, info: 'Berlin, Germany' },
+                        { lat: -23.5505, lon: -46.6333, info: 'São Paulo, Brazil' },
+                        { lat: 35.6895, lon: 139.6917, info: 'Tokyo, Japan' },
+                        { lat: 51.5074, lon: -0.1278, info: 'London, UK' },
+                        { lat: 48.8566, lon: 2.3522, info: 'Paris, France' },
+                        { lat: 55.7558, lon: 37.6173, info: 'Moscow, Russia' },
+                        { lat: 40.7128, lon: -74.0060, info: 'New York, USA' },
+                        { lat: 34.0522, lon: -118.2437, info: 'Los Angeles, USA' },
+                        { lat: 39.9042, lon: 116.4074, info: 'Beijing, China' },
+                        { lat: 37.5665, lon: 126.9780, info: 'Seoul, South Korea' },
+                        { lat: -33.8688, lon: 151.2093, info: 'Sydney, Australia' },
+                        { lat: 43.6532, lon: -79.3832, info: 'Toronto, Canada' },
+                        { lat: 19.4326, lon: -99.1332, info: 'Mexico City, Mexico' },
+                        { lat: 28.6139, lon: 77.2090, info: 'New Delhi, India' },
+                        { lat: -34.6037, lon: -58.3816, info: 'Buenos Aires, Argentina' },
+                        { lat: 41.9028, lon: 12.4964, info: 'Rome, Italy' },
+                        { lat: 52.2297, lon: 21.0122, info: 'Warsaw, Poland' },
+                        { lat: 38.7223, lon: -9.1393, info: 'Lisbon, Portugal' },
+                        { lat: 40.4168, lon: -3.7038, info: 'Madrid, Spain' }
+                    ];
+                    staticNodes.forEach(node => {
+                        const marker = L.marker([node.lat, node.lon]);
+                        marker.bindPopup(node.info);
+                        markers.addLayer(marker);
+                    });
                 });
-                document.getElementById('wallet-info').classList.remove('hidden');
-                document.getElementById('wallet-error').classList.add('hidden');
-            } catch (error) {
-                console.error('Erro na Carteira:', error);
-                document.getElementById('wallet-error').classList.remove('hidden');
-            }
         }
 
         function loadTimeline() {
@@ -380,9 +524,8 @@
             events.forEach((event, index) => {
                 const item = document.createElement('div');
                 item.classList.add('timeline-item');
-                if (index % 2 === 1) {
-                    item.classList.add('timeline-item-even');
-                }
+                item.style.left = (index % 2 === 1) ? '50%' : '0';
+                item.style.textAlign = (index % 2 === 1) ? 'left' : 'right';
                 item.innerHTML = `
                     <div class="timeline-content">
                         <p class="timeline-date">${event.date}</p>
@@ -451,7 +594,7 @@
                 2023: 1940,
                 2024: 2300
             };
-            const currentYear = 2024; // Since current date is 2025, but prices up to 2024
+            const currentYear = 2024;
             if (year < 2010 || year > currentYear) {
                 alert('Ano inválido. Use entre 2010 e 2024.');
                 return;
@@ -485,12 +628,130 @@
             document.getElementById('simulation-results').classList.remove('hidden');
         }
 
-        function toggleTheme() {
-            document.documentElement.classList.toggle('dark');
-            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        function openMessageVault() {
+            console.log('Abrindo Cofre de Mensagens Imortais'); // Debug
+            openModal('🔑 Cofre de Mensagens Imortais', `
+                <p class="mb-4 text-gray-300">Crie mensagens imortais na blockchain do Bitcoin! Digite sua mensagem (até 240 caracteres), gere um hash SHA256 e siga os passos para gravá-lo na blockchain. Uma forma poderosa de liberdade de expressão resistente à censura!</p>
+                
+                <div class="mb-4">
+                    <textarea id="message-input" maxlength="240" rows="4" class="bg-gray-700 p-3 rounded-md text-white w-full focus:outline-none" placeholder="Digite sua mensagem (máx. 240 caracteres)"></textarea>
+                    <div id="char-counter" class="char-counter">0/240 caracteres</div>
+                </div>
+                
+                <button onclick="generateMessageHash()" class="bg-neon-orange text-gray-900 py-2 px-4 rounded-md hover:bg-orange-600 transition-all duration-300 w-full">Gerar Hash</button>
+                
+                <div id="hash-result" class="mt-4 hidden">
+                    <p class="font-bold mb-2 text-neon-orange">Hash SHA256 Gerado:</p>
+                    <p id="generated-hash" class="text-sm text-gray-200 bg-gray-900 p-2 rounded"></p>
+                    <button onclick="copyHashToClipboard()" class="bg-gray-700 text-white py-1 px-3 rounded text-sm mt-2 hover:bg-gray-600">Copiar Hash</button>
+                </div>
+                
+                <div id="error-message" class="error-message hidden"></div>
+                
+                <div id="instructions" class="mt-6 grid gap-4 hidden">
+                    <h3 class="text-lg font-semibold text-neon-orange">Como Imortalizar Sua Mensagem</h3>
+                    <div class="step">
+                        <span class="step-number">1</span>
+                        <p>Digite sua mensagem e clique em "Gerar Hash" para criar o código SHA256.</p>
+                    </div>
+                    <div class="step">
+                        <span class="step-number">2</span>
+                        <p>Copie o hash gerado. Ele é único para sua mensagem e já está em formato hexadecimal.</p>
+                    </div>
+                    <div class="step">
+                        <span class="step-number">3</span>
+                        <p>Baixe uma carteira Bitcoin que suporte OP_RETURN, como <a href="https://electrum.org" target="_blank" class="text-neon-orange hover:underline">Electrum</a> (gratuita e open source).</p>
+                    </div>
+                    <div class="step">
+                        <span class="step-number">4</span>
+                        <p>Crie uma transação na carteira, adicionando o hash como dado OP_RETURN. No Electrum, use "Tools" > "Pay to many" e insira o hash no campo de script (máx. 80 bytes).</p>
+                    </div>
+                    <div class="step">
+                        <span class="step-number">5</span>
+                        <p>Envie a transação com uma taxa pequena (ex.: 1-2 sat/vB). Verifique a confirmação em um block explorer como <a href="https://blockchain.com/explorer" target="_blank" class="text-neon-orange hover:underline">blockchain.com</a>.</p>
+                    </div>
+                    <div class="step">
+                        <span class="step-number">6</span>
+                        <p>Pronto! Sua mensagem está imortalizada na blockchain, resistente à censura. Você pode manter a mensagem original privada, mas o hash prova sua existência.</p>
+                    </div>
+                    <p class="text-sm text-red-500 mt-2">Nota: Este site apenas gera o hash. Você precisa de uma carteira Bitcoin para gravá-lo na blockchain.</p>
+                </div>
+            `);
+            
+            // Adicionar contador de caracteres
+            const messageInput = document.getElementById('message-input');
+            const charCounter = document.getElementById('char-counter');
+            
+            messageInput.addEventListener('input', function() {
+                const length = this.value.length;
+                charCounter.textContent = `${length}/240 caracteres`;
+                
+                if (length > 200) {
+                    charCounter.classList.add('warning');
+                    charCounter.classList.remove('error');
+                } else if (length > 230) {
+                    charCounter.classList.remove('warning');
+                    charCounter.classList.add('error');
+                } else {
+                    charCounter.classList.remove('warning', 'error');
+                }
+            });
         }
 
-        if (localStorage.getItem('theme') === 'light') document.documentElement.classList.remove('dark');
+        function generateMessageHash() {
+            const message = document.getElementById('message-input').value;
+            const errorDiv = document.getElementById('error-message');
+            const hashResult = document.getElementById('hash-result');
+            const instructions = document.getElementById('instructions');
+            errorDiv.classList.add('hidden');
+
+            if (!message) {
+                errorDiv.textContent = 'Por favor, digite uma mensagem.';
+                errorDiv.classList.remove('hidden');
+                hashResult.classList.add('hidden');
+                instructions.classList.add('hidden');
+                return;
+            }
+            if (message.length > 240) {
+                errorDiv.textContent = 'A mensagem não pode exceder 240 caracteres.';
+                errorDiv.classList.remove('hidden');
+                hashResult.classList.add('hidden');
+                instructions.classList.add('hidden');
+                return;
+            }
+
+            const hash = CryptoJS.SHA256(message).toString(CryptoJS.enc.Hex);
+            document.getElementById('generated-hash').textContent = hash;
+            hashResult.classList.remove('hidden');
+            instructions.classList.remove('hidden');
+        }
+
+        function copyHashToClipboard() {
+            const hashText = document.getElementById('generated-hash').textContent;
+            navigator.clipboard.writeText(hashText).then(() => {
+                // Feedback visual de cópia bem-sucedida
+                const button = document.querySelector('button[onclick="copyHashToClipboard()"]');
+                const originalText = button.textContent;
+                button.textContent = 'Copiado!';
+                button.style.backgroundColor = '#10B981';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.backgroundColor = '';
+                }, 2000);
+            });
+        }
+
+        function openModal(title, content) {
+            console.log('Abrindo modal com título:', title); // Debug
+            document.getElementById('tool-title').textContent = title;
+            document.getElementById('tool-content').innerHTML = content;
+            document.getElementById('tool-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('tool-modal').classList.add('hidden');
+        }
 
         showModule('price-tracker');
     </script>
